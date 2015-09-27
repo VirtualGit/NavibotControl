@@ -17,12 +17,11 @@
  \------------------------------------------------------------------------------*/
 
 
-// Include for real time clock
-#include <Time.h>
+// Includes for real time clock. Download lib from https://github.com/adafruit/RTClib
 #include <Wire.h>
-#include <DS1307RTC.h>
+#include <RTClib.h>
 
-// Include for IR Emitter
+// Include for IR Emitter. Download lib from http://github.com/shirriff/Arduino-IRremote
 #include <IRremote.h>
 
 // Raw IR sequence for basic commands
@@ -57,7 +56,8 @@ bool scheduleMax[7][24] = {
 
 // Global variable for IR emitter
 IRsend irsend;
-
+// Global variable for accessing DS1307
+RTC_DS1307 rtc;
 
 // Program startup
 void setup() {
@@ -65,32 +65,33 @@ void setup() {
    Serial.begin(9600);
    // wait for serial
    while (!Serial) ; 
+
+   // Start communication with DS1307
+   Wire.begin();
+   rtc.begin();
+   if (! rtc.isrunning()) {
+      Serial.println("RTC is NOT running ! Sending time");
+      // following line sets the RTC to the date & time this sketch was compiled
+      rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+   }
 }
 
 
 // Main program
 void loop() {
-   // Time elements
-   tmElements_t tm;
-  
-   // Read time
-   if (RTC.read(tm)) {
-    
+   
+   DateTime now = rtc.now();
+       
+   if ( rtc.isrunning() ) {
       // On success, write the date so pluging it allows you to check the current date
-      printDate( &tm );
+      printDate( now );
       // Check if some command should be send now
-      checkScheduler( &tm );
-    
+      checkScheduler( now );
    } else {
-      if (RTC.chipPresent()) {
-         Serial.println("The DS1307 is stopped.  Please run the SetTime");
-         Serial.println("example to initialize the time and begin running.");
-         Serial.println();
-      } else {
-         Serial.println("DS1307 read error!  Please check the circuitry.");
-         Serial.println();
-      }
+      Serial.println("RTC is NOT running !");
    }
+
+
 
    // No need to check faster than once per minute. On teensy boards, this delay should
    // set the board in a deep sleep mode so the consumption is near 0mA. On arduino
@@ -101,44 +102,44 @@ void loop() {
 
 
 // Print the given date
-void printDate( tmElements_t* tm )
+void printDate( const DateTime& dt )
 {
    Serial.print("Ok, WDay = ");
-   Serial.print(tm->Wday);
+   Serial.print( dt.dayOfWeek() );
    Serial.print(" Time = ");
-   print2digits(tm->Hour);
+   print2digits( dt.hour() );
    Serial.write(':');
-   print2digits(tm->Minute);
+   print2digits( dt.minute() );
    Serial.write(':');
-   print2digits(tm->Second);
+   print2digits( dt.second() );
    Serial.print(", Date (D/M/Y) = ");
-   Serial.print(tm->Day);
+   Serial.print( dt.day() );
    Serial.write('/');
-   Serial.print(tm->Month);
+   Serial.print( dt.month() );
    Serial.write('/');
-   Serial.print(tmYearToCalendar(tm->Year));
+   Serial.print( dt.year() );
    Serial.println();
 }
 
 // Check if a command should be send at the given date, and send it
 // if needed.
-void checkScheduler( tmElements_t* tm )
+void checkScheduler( const DateTime& dt )
 {
    // Check bounds
-   if( tm->Wday < 0 || tm->Wday > 6 || tm->Hour < 0 || tm->Hour > 23 )
+   if( dt.dayOfWeek() < 0 || dt.dayOfWeek() > 6 || dt.hour() < 0 || dt.hour() > 23 )
    {
       Serial.println("An error occured : weekday or hour out of bounds.");
       return;
    }
   
    // Check if some IR command should be send now
-   if( scheduleMax[tm->Wday][tm->Hour] )
+   if( scheduleMax[dt.dayOfWeek()][dt.hour()] )
    {
       // Send maximum cleaning command
       Serial.println("Start maximum cleaning");
       irsend.sendRaw(MaxCommand, 68, 38);
    }
-   if( scheduleEdge[tm->Wday][tm->Hour] )
+   if( scheduleEdge[dt.dayOfWeek()][dt.hour()] )
    {
       // Send edge cleaning command
       Serial.println("Start edge cleaning");
@@ -153,3 +154,4 @@ void print2digits( int number ) {
    }
    Serial.print(number);
 }
+
