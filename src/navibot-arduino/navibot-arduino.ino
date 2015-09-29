@@ -63,8 +63,6 @@ RTC_DS1307 rtc;
 void setup() {
    // Init serial port
    Serial.begin(9600);
-   // wait for serial
-   while (!Serial) ; 
 
    // Start communication with DS1307
    Wire.begin();
