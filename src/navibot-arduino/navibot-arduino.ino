@@ -33,25 +33,25 @@ unsigned int MaxCommand[68]  = {4590, 4590, 590, 1690, 590, 590, 590, 590, 590, 
 // Schedule Edge mode
 //   0h    1h    2h    3h    4h    5h    6h    7h    8h    9h    10h   11h   12h   13h   14h   15h   16h   17h   18h   19h   20h   21h   22h   23h
 bool scheduleEdge[7][24] = {
-   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Saterday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Sunday
    {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false,false,false,false,false}, // Monday
    {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,true ,false,false,false,false,false,false,false,false}, // Tuesday
    {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,true ,false,false,false,false,false,false,false,false}, // Wednesday
    {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,true ,false,false,false,false,false,false,false,false}, // Thursday
-   {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false,false,false,false,false}  // Friday
+   {false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false,false,false,false,false}, // Friday
+   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}  // Saterday
 };
 
 // Schedule Max mode
 //   0h    1h    2h    3h    4h    5h    6h    7h    8h    9h    10h   11h   12h   13h   14h   15h   16h   17h   18h   19h   20h   21h   22h   23h
 bool scheduleMax[7][24] = {
-   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Saterday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Sunday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false}, // Monday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Tuesday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Wednesday
    {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}, // Thursday
-   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false}  // Friday
+   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true ,false,false,false,false,false,false,false}, // Friday
+   {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}  // Saterday
 };
 
 // Global variable for IR emitter
@@ -131,13 +131,13 @@ void checkScheduler( const DateTime& dt )
    }
   
    // Check if some IR command should be send now
-   if( scheduleMax[dt.dayOfWeek()][dt.hour()] )
+   if( scheduleMax[dt.dayOfWeek()][dt.hour()] && dt.minute() == 0 )
    {
       // Send maximum cleaning command
       Serial.println("Start maximum cleaning");
       irsend.sendRaw(MaxCommand, 68, 38);
    }
-   if( scheduleEdge[dt.dayOfWeek()][dt.hour()] )
+   if( scheduleEdge[dt.dayOfWeek()][dt.hour()] && dt.minute() == 0 )
    {
       // Send edge cleaning command
       Serial.println("Start edge cleaning");
