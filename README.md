@@ -1,4 +1,6 @@
-# Navibot Control
+# Navibot Control [DISCONTINUED]
+THIS PROJECT IS UNFORTUNATELY DISCONTINUED
+
 Advanced and remote control of Samsung Navibot vacuum cleaners.
 
 This project allows you to :
